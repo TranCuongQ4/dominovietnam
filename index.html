@@ -1,0 +1,74 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Domino Việt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <div class="header">
+            <h1>♢ Domino Việt ♢</h1>
+        </div>
+
+        <!-- Khu vực bot -->
+        <div class="bot-info">
+            <div class="bot-row" id="botWest">
+                <span class="bot-name">⬅ Bot Tây</span>
+                <div class="bot-cards" id="botWestCards"></div>
+                <span class="card-count" id="botWestCount">7</span>
+            </div>
+            <div class="bot-row" id="botNorth">
+                <span class="bot-name">⬆ Bot Bắc</span>
+                <div class="bot-cards" id="botNorthCards"></div>
+                <span class="card-count" id="botNorthCount">7</span>
+            </div>
+            <div class="bot-row" id="botEast">
+                <span class="bot-name">➡ Bot Đông</span>
+                <div class="bot-cards" id="botEastCards"></div>
+                <span class="card-count" id="botEastCount">7</span>
+            </div>
+        </div>
+
+        <!-- Bàn cờ -->
+        <div class="board-wrapper">
+            <div class="board-area" id="boardArea"></div>
+        </div>
+
+        <!-- Quân cờ của Tôi -->
+        <div class="my-section">
+            <div class="my-label">⬇ Tôi</div>
+            <div class="my-tiles" id="myTilesContainer"></div>
+        </div>
+
+        <!-- Nút điều khiển -->
+        <div class="actions">
+            <button id="btnNewGame">♲ Ván Mới</button>
+            <button id="btnPlay">Đánh Cờ</button>
+            <button id="btnPass">Qua Lượt</button>
+        </div>
+
+        <div class="footer">Thiết Kế Trần Cường - Zalo: 0907860662</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toastMessage">
+        <span id="toastText">Thông báo</span>
+        <button class="close-btn" id="toastClose">Đóng</button>
+    </div>
+
+    <!-- Bảng kết quả -->
+    <div class="result-board" id="resultBoard">
+        <h2>🏆 KẾT THÚC 🏆</h2>
+        <div id="resultContent"></div>
+        <button class="close-btn" id="resultClose">Đóng</button>
+    </div>
+
+     <script src="botco.js"></script>
+<script src="quanly.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

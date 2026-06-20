@@ -1,0 +1,301 @@
+/* style.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+
+body {
+    width: 375px;
+    height: 667px;
+    margin: 0 auto;
+    background: #0b0e14;
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #0b0e14;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    padding: 4px 0 3px;
+    text-align: center;
+    flex-shrink: 0;
+    background: #131a22;
+    border-bottom: 1px solid #2a3a4a;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #fff;
+    text-shadow: 0 0 8px #ffccaa, 0 0 16px #ff8844;
+}
+
+/* Bot info */
+.bot-info {
+    flex-shrink: 0;
+    background: #0d141c;
+    padding: 3px 6px;
+    border-bottom: 1px solid #1e2e3a;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bot-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #111b24;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #1e2e3a;
+}
+
+.bot-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #aac;
+    min-width: 65px;
+}
+
+.bot-cards {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    overflow: hidden;
+    flex-wrap: wrap;
+}
+
+.bot-card {
+    width: 14px;
+    height: 18px;
+    background: #1a2a3a;
+    border: 1px solid #3a5060;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.card-count {
+    font-size: 10px;
+    font-weight: bold;
+    color: #8aa;
+    min-width: 18px;
+    text-align: right;
+}
+
+/* KHU VỰC BÀN CỜ - THAY ĐỔI THEO PHONG CÁCH VÂN GỖ XANH LÁ CAO CẤP */
+.board-wrapper {
+    flex: 1;
+    background: #090e14; /* Nền tối nhẹ bên ngoài giúp tôn khung gỗ */
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.board-area {
+    /* Tạo hiệu ứng vân gỗ lượn sóng màu xanh lá bằng gradient phức hợp */
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(35, 85, 45, 0.4), rgba(15, 45, 20, 0.85)),
+        repeating-linear-gradient(45deg, rgba(20, 55, 25, 0.15) 0px, rgba(20, 55, 25, 0.15) 2px, transparent 2px, transparent 6px),
+        repeating-linear-gradient(-45deg, rgba(30, 80, 35, 0.1) 0px, rgba(30, 80, 35, 0.1) 1px, transparent 1px, transparent 4px),
+        linear-gradient(135deg, #1b4522 0%, #0d2b14 100%);
+        
+    border-radius: 12px;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    
+    /* Viền giả lập gờ khung gỗ sang trọng kết hợp đổ bóng lòng bàn cờ chìm sâu xuống */
+    border: 4px solid #275d33;
+    box-shadow: 
+        inset 0 0 25px rgba(0, 0, 0, 0.85),
+        0 4px 15px rgba(0, 0, 0, 0.6),
+        0 0 10px rgba(40, 100, 50, 0.3);
+}
+
+/* Giao diện quân cờ trên bàn (Tăng cường shadow để nổi bật trên mặt vân gỗ) */
+.played-tile {
+    position: absolute;
+    display: flex;
+    background: #f5f0ec;
+    border-radius: 3px;
+    border: 1.5px solid #222;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6); /* Đổ bóng sâu hơn để cờ nổi lên khỏi mặt gỗ */
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Định dạng xoay và kích thước */
+.played-tile.vertical {
+    flex-direction: column;
+    width: 24px;
+    height: 44px;
+}
+
+.played-tile.horizontal {
+    flex-direction: row;
+    width: 44px;
+    height: 24px;
+}
+
+.played-tile .half {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Vạch chia giữa quân cờ */
+.played-tile.vertical .divider {
+    width: 100%;
+    height: 1px;
+    background: #333;
+}
+
+.played-tile.horizontal .divider {
+    width: 1px;
+    height: 100%;
+    background: #333;
+}
+
+/* Lưới hiển thị chấm đen sắc nét */
+.dot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 5px);
+    grid-template-rows: repeat(3, 5px);
+    gap: 1px;
+    justify-content: center;
+    align-content: center;
+    width: 17px;
+    height: 17px;
+}
+
+.dot {
+    width: 5px;
+    height: 5px;
+    background: #111;
+    border-radius: 50%;
+}
+
+.empty-dot {
+    width: 5px;
+    height: 5px;
+}
+
+/* Quân cờ của người chơi */
+.my-section {
+    flex-shrink: 0;
+    background: #111b24;
+    padding: 4px 6px;
+    border-top: 1px solid #1e2e3a;
+}
+
+.my-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #aac;
+    margin-bottom: 2px;
+}
+
+.my-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    min-height: 50px;
+}
+
+.my-tile {
+    background: #f5f0ec;
+    border-radius: 4px;
+    padding: 2px;
+    border: 1.5px solid #444;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 26px;
+    height: 46px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+}
+
+.my-tile .half {
+    width: 22px;
+    height: 21px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.my-tile .divider {
+    width: 100%;
+    height: 1px;
+    background: #444;
+}
+
+.my-tile.selected {
+    border: 2px solid #ffaa00;
+    box-shadow: 0 0 8px #ffaa00;
+    transform: translateY(-2px);
+}
+
+/* Nút chức năng */
+.actions {
+    display: flex;
+    gap: 5px;
+    padding: 5px 6px;
+    background: #0d141c;
+    justify-content: center;
+    flex-shrink: 0;
+    border-top: 1px solid #1e2e3a;
+}
+
+.actions button {
+    background: #1f2e3c;
+    border: 1px solid #3a5060;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-weight: 700;
+    font-size: 12px;
+    color: #eef;
+    cursor: pointer;
+    flex: 1;
+}
+
+.actions button:active { transform: scale(0.98); }
+.actions button#btnNewGame { background: #2a3f4a; color: #ffddaa; }
+.actions button#btnPlay { background: #3a5a3a; color: #ddfadd; }
+.actions button#btnPass { background: #5a3a3a; color: #ffcccc; }
+
+.footer { text-align: center; font-size: 8px; color: #688; padding: 2px 0; background: #0a1118; }
+.toast { position: absolute; top: 30%; left: 10%; width: 80%; background: #1a1a2e; border: 2px solid #a44; border-radius: 12px; padding: 12px; color: #ffd; text-align: center; font-weight: bold; z-index: 99; display: none; flex-direction: column; gap: 6px; }
+.toast.show { display: flex; }
+.toast .close-btn { background: #3a2a2a; border: 1px solid #b77; border-radius: 10px; color: #ffd; padding: 4px; cursor: pointer; }
+.result-board { position: absolute; top: 15%; left: 6%; width: 88%; background: #a11; border: 3px solid #f0e0d0; border-radius: 15px; padding: 12px; color: #fff; text-align: center; z-index: 100; display: none; flex-direction: column; gap: 6px; }
+.result-board.show { display: flex; }
+.result-board .rank { font-size: 13px; background: #33000080; border-radius: 15px; padding: 3px; margin: 1px 0; }
+.result-board .close-btn { background: #2a1a1a; border: 1px solid #d99; border-radius: 15px; color: #fff; padding: 4px; cursor: pointer; }
