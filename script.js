@@ -77,6 +77,17 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
         }
         return maxIdx;
     }
+	
+	function setRealHeight() {
+    document.documentElement.style.setProperty(
+        '--vh',
+        `${window.innerHeight * 0.01}px`
+    );
+}
+
+setRealHeight();
+window.addEventListener('resize', setRealHeight);
+
 
     function initGame() {
         gameOver = false;
