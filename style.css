@@ -23,6 +23,7 @@ body {
     font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
     color: #eee;
     display: flex;
+	position: fixed; /* THÊM DÒNG NÀY */
     justify-content: center;
     align-items: center;
     overflow: hidden; /* Quay lại hidden, nhưng thay đổi ở #app */
