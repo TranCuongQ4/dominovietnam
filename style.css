@@ -25,7 +25,9 @@ body {
     display: flex;
 	position: fixed; /* THÊM DÒNG NÀY */
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+	overflow-y: auto; /* Cho phép cuộn dọc */
+	overflow-x: hidden;
     overflow: hidden; /* Quay lại hidden, nhưng thay đổi ở #app */
 }
 
