@@ -1,18 +1,18 @@
-// blink.js - Hiệu ứng chớp sáng tên người chơi (Chỉ chớp phần chữ, không chớp toàn khung)
+// blink.js - Hiệu ứng chớp sáng tên người chơi (Lấy currentPlayer trực tiếp)
 (function() {
     let blinkInterval = null;
     let currentBlinkPlayer = -1;
     let isBlinking = false;
     let blinkTimeout = null;
+    let lastPlayer = -1;
+    let watcherInterval = null;
 
-    // Lấy element tên người chơi - CHỈ LẤY PHẦN CHỮ BÊN TRONG
+    // Lấy element tên người chơi
     function getPlayerNameElement(playerIdx) {
-        // Đối với người chơi (Tôi), lấy span bên trong
         if (playerIdx === 0) {
             return document.getElementById('playerName0');
         }
         
-        // Đối với bot, lấy bot-name
         const selectors = [
             null,
             '#botWest .bot-name',
@@ -25,7 +25,7 @@
     // Lưu style gốc
     const originalStyles = {};
 
-    // Tạo hiệu ứng chớp sáng - CHỈ THAY ĐỔI MÀU SẮC
+    // Tạo hiệu ứng chớp sáng
     function startBlink(playerIdx) {
         stopBlink();
 
@@ -39,7 +39,6 @@
         currentBlinkPlayer = playerIdx;
         isBlinking = true;
 
-        // Lưu style gốc
         if (!originalStyles[playerIdx]) {
             originalStyles[playerIdx] = {
                 backgroundColor: el.style.backgroundColor || '',
@@ -65,7 +64,6 @@
             isOn = !isOn;
 
             if (isOn) {
-                // TRẠNG THÁI SÁNG
                 el.style.backgroundColor = '#ffffff';
                 el.style.color = '#000000';
                 el.style.textShadow = '0 0 20px #ffffff, 0 0 40px #ffdd44';
@@ -74,7 +72,6 @@
                 el.style.borderRadius = '6px';
                 el.style.padding = '2px 8px';
             } else {
-                // TRẠNG THÁI TỐI
                 el.style.backgroundColor = '#cc2200';
                 el.style.color = '#ffffff';
                 el.style.textShadow = '0 0 15px #ff4400, 0 0 30px #ff2200';
@@ -106,7 +103,6 @@
             blinkTimeout = null;
         }
 
-        // Khôi phục style cho tất cả
         for (let i = 0; i < 4; i++) {
             const el = getPlayerNameElement(i);
             if (el) {
@@ -119,7 +115,6 @@
                     el.style.color = '';
                     el.style.textShadow = '';
                 }
-                // Xóa outline và các style thêm vào
                 el.style.outline = '';
                 el.style.outlineOffset = '';
                 el.style.borderRadius = '';
@@ -131,12 +126,49 @@
         isBlinking = false;
     }
 
-    // Lấy currentPlayer từ game
+    // ===== LẤY CURRENTPLAYER TRỰC TIẾP TỪ GAME =====
     function getCurrentPlayer() {
+        // Thử lấy từ window.currentPlayer
         if (window.currentPlayer !== undefined && window.currentPlayer !== null) {
             return window.currentPlayer;
         }
+        
+        // Nếu không, thử kiểm tra bằng cách nào khác
+        // Kiểm tra xem có quân cờ nào đang được chọn không
+        const selectedTile = document.querySelector('.my-tile.selected');
+        if (selectedTile) {
+            // Nếu có quân cờ được chọn, có thể là lượt của người chơi
+            return 0;
+        }
+        
         return -1;
+    }
+
+    // ===== LẤY CURRENTPLAYER TỪ BẢNG KẾT QUẢ =====
+    function getPlayerFromResultBoard() {
+        const resultBoard = document.getElementById('resultBoard');
+        if (!resultBoard || !resultBoard.classList.contains('show')) {
+            return null;
+        }
+        
+        const content = document.getElementById('resultContent');
+        if (!content) return null;
+        
+        const rankElements = content.querySelectorAll('.rank');
+        if (rankElements.length === 0) return null;
+        
+        const names = ['Tôi', 'Bot Tây', 'Bot Bắc', 'Bot Đông'];
+        for (let el of rankElements) {
+            const text = el.textContent;
+            if (text.includes('Nhất') || text.includes('🥇')) {
+                for (let name of names) {
+                    if (text.includes(name)) {
+                        return names.indexOf(name);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     // Cập nhật blink
@@ -154,6 +186,29 @@
         startBlink(playerIdx);
     }
 
+    // ===== RESET KHI BẮT ĐẦU VÁN MỚI =====
+    function resetForNewGame() {
+        stopBlink();
+        lastPlayer = -1;
+        
+        if (watcherInterval) {
+            clearInterval(watcherInterval);
+            watcherInterval = null;
+        }
+        
+        console.log('🔄 Reset blink cho ván mới');
+        
+        setTimeout(() => {
+            const player = getCurrentPlayer();
+            if (player >= 0 && !window.gameOver) {
+                console.log('🎯 Cập nhật blink cho người chơi:', player);
+                lastPlayer = player;
+                updateBlink(player);
+            }
+            startDOMWatcher();
+        }, 500);
+    }
+
     // ===== THEO DÕI BẰNG CÁCH HOOK VÀO moveToNextPlayer =====
     function hookGameFunctions() {
         if (typeof window.moveToNextPlayer === 'function') {
@@ -163,6 +218,7 @@
                 setTimeout(() => {
                     const player = getCurrentPlayer();
                     if (player >= 0 && !window.gameOver) {
+                        console.log('🔄 Chuyển lượt đến:', player);
                         updateBlink(player);
                     }
                 }, 300);
@@ -177,6 +233,7 @@
                 setTimeout(() => {
                     const player = getCurrentPlayer();
                     if (player >= 0 && !window.gameOver) {
+                        console.log('🎯 Sau khi đánh, lượt:', player);
                         updateBlink(player);
                     }
                 }, 400);
@@ -187,9 +244,14 @@
 
     // ===== THEO DÕI BẰNG CÁCH QUÉT DOM =====
     function startDOMWatcher() {
-        let lastPlayer = -1;
+        if (watcherInterval) {
+            clearInterval(watcherInterval);
+            watcherInterval = null;
+        }
         
-        setInterval(() => {
+        console.log('👀 Bắt đầu DOM watcher');
+        
+        watcherInterval = setInterval(() => {
             if (window.gameOver) {
                 if (isBlinking) {
                     stopBlink();
@@ -200,6 +262,7 @@
             const currentPlayer = getCurrentPlayer();
             
             if (currentPlayer !== lastPlayer && currentPlayer >= 0) {
+                console.log('👀 Phát hiện thay đổi:', lastPlayer, '->', currentPlayer);
                 lastPlayer = currentPlayer;
                 
                 if (window.finishedPlayers && window.finishedPlayers.includes(currentPlayer)) {
@@ -211,12 +274,14 @@
 
                 updateBlink(currentPlayer);
             }
-        }, 500);
+        }, 300); // Kiểm tra nhanh hơn
     }
 
     // ===== KHỞI TẠO =====
     function init() {
-        // Lưu style gốc cho tất cả người chơi
+        console.log('💡 Khởi tạo Blink.js...');
+        
+        // Lưu style gốc
         for (let i = 0; i < 4; i++) {
             const el = getPlayerNameElement(i);
             if (el && !originalStyles[i]) {
@@ -226,6 +291,32 @@
                     textShadow: el.style.textShadow || '',
                 };
             }
+        }
+
+        // Theo dõi nút "Ván Mới"
+        const btnNewGame = document.getElementById('btnNewGame');
+        if (btnNewGame) {
+            btnNewGame.addEventListener('click', function() {
+                console.log('🔄 Click Ván Mới');
+                setTimeout(() => {
+                    resetForNewGame();
+                }, 600);
+            });
+        }
+
+        // Theo dõi đóng bảng kết quả
+        const resultClose = document.getElementById('resultClose');
+        if (resultClose) {
+            resultClose.addEventListener('click', function() {
+                setTimeout(() => {
+                    const player = getCurrentPlayer();
+                    if (player >= 0 && !window.gameOver) {
+                        console.log('📋 Đóng bảng kết quả, cập nhật:', player);
+                        lastPlayer = player;
+                        updateBlink(player);
+                    }
+                }, 300);
+            });
         }
 
         setTimeout(() => {
@@ -239,6 +330,8 @@
         setTimeout(() => {
             const player = getCurrentPlayer();
             if (player >= 0 && !window.gameOver) {
+                console.log('🎯 Lượt ban đầu:', player);
+                lastPlayer = player;
                 updateBlink(player);
             }
         }, 1000);
@@ -247,7 +340,8 @@
             start: startBlink,
             stop: stopBlink,
             update: updateBlink,
-            getCurrent: getCurrentPlayer
+            getCurrent: getCurrentPlayer,
+            reset: resetForNewGame
         };
     }
 

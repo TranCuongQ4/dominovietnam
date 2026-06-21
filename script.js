@@ -89,6 +89,16 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
         pendingTileForDirection = null;
         forcedDirection = null;
         resultBoard.classList.remove('show');
+		
+		
+		dealCards();
+    currentPlayer = findFirstPlayer();
+    
+    // ===== CẬP NHẬT window.currentPlayer =====
+    window.currentPlayer = currentPlayer;
+    console.log('🎯 initGame: currentPlayer =', currentPlayer); // Thêm log
+	
+	
 
         // Ẩn hộp chọn hướng nếu có
         hideDirectionChooser();
@@ -1079,3 +1089,27 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
     window.moveToNextPlayer = moveToNextPlayer;
 
 })();
+
+// Hàm chuyển lượt thông minh - SỬA
+function moveToNextPlayer() {
+    if (finishedPlayers.length >= 3) {
+        for (let i = 0; i < 4; i++) {
+            if (!finishedPlayers.includes(i)) {
+                finishedPlayers.push(i);
+                break;
+            }
+        }
+        endGame(false);
+        return;
+    }
+
+    let nextPlayer = (currentPlayer + 1) % 4;
+    while (finishedPlayers.includes(nextPlayer)) {
+        nextPlayer = (nextPlayer + 1) % 4;
+    }
+    currentPlayer = nextPlayer;
+    
+    // ===== CẬP NHẬT window.currentPlayer =====
+    window.currentPlayer = currentPlayer;
+    console.log('🔄 moveToNextPlayer: currentPlayer =', currentPlayer); // Thêm log
+}
