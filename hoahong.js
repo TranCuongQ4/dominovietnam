@@ -1,4 +1,4 @@
-// hoahong.js - Quản lý điểm hoa hồng 🌷 (Sửa lỗi ván sau)
+// hoahong.js - Quản lý điểm hoa hồng 🌷 (XỬ LÝ NGAY - KHÔNG ĐỢI AI)
 (function() {
     const STORAGE_KEY = 'domino_hoahong';
     const STARTING_POINTS = 1000;
@@ -18,6 +18,12 @@
     let dragOffsetY = 0;
     let watchInterval = null;
     let isWatching = false;
+    let isInitialized = false;
+    
+    // Biến kiểm soát
+    let lastProcessedTime = 0;
+    let isProcessingResult = false;
+    let processedRankings = [];
 
     // Khởi tạo điểm cho người chơi
     function initPlayerPoints() {
@@ -141,7 +147,10 @@
 
     // Tạo bảng điểm hoa hồng có thể di chuyển
     function createScoreBoard() {
-        if (document.getElementById('scoreBoard')) return;
+        if (document.getElementById('scoreBoard')) {
+            updateScoreBoard();
+            return;
+        }
         
         const board = document.createElement('div');
         board.id = 'scoreBoard';
@@ -180,7 +189,6 @@
         
         document.body.appendChild(board);
         
-        // Thêm nút toggle có thể di chuyển
         const toggleBtn = document.getElementById('toggleScoreBtn');
         if (!toggleBtn) {
             const btn = document.createElement('button');
@@ -204,7 +212,6 @@
                 user-select: none;
             `;
             
-            // Drag functionality cho nút 🌷
             btn.addEventListener('mousedown', function(e) {
                 isDragging = true;
                 const rect = this.getBoundingClientRect();
@@ -242,7 +249,6 @@
                 }
             });
 
-            // Touch support cho mobile
             btn.addEventListener('touchstart', function(e) {
                 const touch = e.touches[0];
                 const rect = this.getBoundingClientRect();
@@ -387,38 +393,31 @@
         }, 3000);
     }
 
-    // Xử lý kết thúc ván và cập nhật điểm
+    // ===== XỬ LÝ KẾT QUẢ - LẤY 4 NGƯỜI TỪ BẢNG =====
     function processGameResult(rankings) {
-        if (isProcessing) {
-            console.log('⏳ Đang xử lý, bỏ qua...');
-            return;
-        }
-        if (rankings.length !== 4) {
-            console.warn('Không đủ 4 người chơi để xếp hạng');
+        if (isProcessingResult) {
+            console.log('⏳ Đang xử lý kết quả, bỏ qua...');
             return;
         }
         
-        const rankingsKey = rankings.join('|');
-        if (lastRankings.length > 0 && lastRankings.join('|') === rankingsKey) {
-            console.log('📊 Đã xử lý kết quả này rồi, bỏ qua');
+        // Kiểm tra xem đã xử lý kết quả này chưa
+        const key = rankings.join('|');
+        if (processedRankings.includes(key)) {
+            console.log('📊 Kết quả đã được xử lý trước đó, bỏ qua');
             return;
         }
         
         console.log('📊 Xử lý kết quả mới:', rankings);
-        lastRankings = rankings;
-        
-        isProcessing = true;
+        processedRankings.push(key);
+        isProcessingResult = true;
 
-        const bonuses = {
-            0: BONUS_FIRST,
-            1: BONUS_SECOND,
-            2: PENALTY_THIRD,
-            3: PENALTY_FOURTH
-        };
-
+        // 4 vị trí: Nhất, Nhì, Ba, Cuối
+        const bonuses = [BONUS_FIRST, BONUS_SECOND, PENALTY_THIRD, PENALTY_FOURTH];
         const results = [];
-        for (let i = 0; i < rankings.length; i++) {
-            const name = rankings[i];
+        
+        // Duyệt qua 4 vị trí
+        for (let i = 0; i < 4; i++) {
+            const name = rankings[i] || 'Bot Bắc'; // Nếu thiếu, mặc định là Bot Bắc
             const change = bonuses[i];
             const oldPoints = getPlayerPoints(name);
             updatePlayerPoints(name, change);
@@ -434,15 +433,15 @@
         // Hiển thị bảng kết quả hoa hồng
         setTimeout(() => {
             showHoahongResult(results);
-        }, 1000);
+        }, 500);
 
         setTimeout(() => {
-            isProcessing = false;
+            isProcessingResult = false;
             console.log('✅ Đã xử lý xong kết quả');
         }, 3000);
     }
 
-    // Hiển thị bảng kết quả hoa hồng
+    // ===== HIỂN THỊ BẢNG KẾT QUẢ HOA HỒNG =====
     function showHoahongResult(results) {
         const oldBoard = document.getElementById('hoahongResult');
         if (oldBoard) {
@@ -581,55 +580,96 @@
         document.head.appendChild(style);
     }
 
-    // ===== LẤY XẾP HẠNG TỪ BẢNG KẾT QUẢ =====
+    // ===== LẤY XẾP HẠNG TỪ BẢNG KẾT QUẢ - XỬ LÝ NGAY =====
     function extractRankings() {
+        console.log('🔍 extractRankings được gọi...');
+        
         const resultBoard = document.getElementById('resultBoard');
         if (!resultBoard || !resultBoard.classList.contains('show')) {
+            console.log('⏳ resultBoard chưa hiển thị');
             return false;
         }
 
         const content = document.getElementById('resultContent');
-        if (!content) return false;
+        if (!content) {
+            console.log('❌ Không tìm thấy resultContent');
+            return false;
+        }
 
         const rankElements = content.querySelectorAll('.rank');
-        if (rankElements.length === 0) return false;
+        if (rankElements.length === 0) {
+            console.log('❌ Không tìm thấy .rank elements');
+            return false;
+        }
 
-        const rankings = [];
+        console.log('✅ Tìm thấy', rankElements.length, 'rank elements');
+
+        // Tạo mảng 4 vị trí mặc định
+        const rankings = ['Tôi', 'Bot Tây', 'Bot Bắc', 'Bot Đông'];
+        const foundRankings = [];
         const names = ['Tôi', 'Bot Tây', 'Bot Bắc', 'Bot Đông'];
         
+        // Lấy danh sách theo thứ tự từ bảng kết quả
         for (let el of rankElements) {
             const text = el.textContent;
             for (let name of names) {
                 if (text.includes(name)) {
-                    rankings.push(name);
+                    foundRankings.push(name);
                     break;
                 }
             }
         }
 
-        if (rankings.length === 4) {
-            console.log('📊 Xếp hạng tìm thấy:', rankings.join(' → '));
-            processGameResult(rankings);
+        console.log('📊 Rankings tìm thấy:', foundRankings);
+
+        // Nếu tìm thấy ít nhất 1 người, xử lý ngay
+        if (foundRankings.length > 0) {
+            // Đảm bảo có đủ 4 vị trí
+            const finalRankings = [];
+            for (let name of names) {
+                if (foundRankings.includes(name)) {
+                    finalRankings.push(name);
+                }
+            }
+            // Thêm những người còn thiếu vào cuối
+            for (let name of names) {
+                if (!finalRankings.includes(name)) {
+                    finalRankings.push(name);
+                }
+            }
+            
+            console.log('📊 Xếp hạng cuối cùng:', finalRankings.join(' → '));
+            
+            const key = finalRankings.join('|');
+            if (processedRankings.includes(key)) {
+                console.log('📊 Kết quả đã được xử lý, bỏ qua');
+                return true;
+            }
+            
+            lastProcessedTime = Date.now();
+            processGameResult(finalRankings);
             return true;
+        } else {
+            console.log('⚠️ Không tìm thấy người chơi nào trong bảng kết quả');
+            return false;
         }
-        return false;
     }
 
     // ===== RESET KHI BẮT ĐẦU VÁN MỚI =====
     function resetForNewGame() {
         console.log('🔄 Reset hoa hồng cho ván mới');
-        // Reset các biến trạng thái
-        isProcessing = false;
+        isProcessingResult = false;
         lastRankings = [];
+        lastProcessedTime = 0;
         
-        // Xóa bảng kết quả cũ nếu có
         const oldBoard = document.getElementById('hoahongResult');
         if (oldBoard) {
             oldBoard.parentNode.removeChild(oldBoard);
         }
         
-        // Cập nhật hiển thị
-        updateHoahongDisplay();
+        setTimeout(() => {
+            updateHoahongDisplay();
+        }, 300);
     }
 
     // ===== THEO DÕI BẢNG KẾT QUẢ =====
@@ -646,12 +686,10 @@
         watchInterval = setInterval(() => {
             const resultBoard = document.getElementById('resultBoard');
             if (resultBoard && resultBoard.classList.contains('show')) {
-                console.log('📋 Phát hiện bảng kết quả đang hiển thị');
-                setTimeout(() => {
-                    extractRankings();
-                }, 800);
+                console.log('📋 [watch] Phát hiện bảng kết quả đang hiển thị');
+                extractRankings();
             }
-        }, 1000);
+        }, 500); // Giảm xuống 500ms để phản hồi nhanh
     }
 
     // Lấy điểm hiện tại của tất cả người chơi
@@ -668,45 +706,75 @@
         savePoints();
         updateHoahongDisplay();
         lastRankings = [];
-        isProcessing = false;
+        isProcessingResult = false;
+        processedRankings = [];
+        lastProcessedTime = 0;
         console.log('🔄 Đã reset hoa hồng về mặc định');
+    }
+
+    // ===== KIỂM TRA BẮT BUỘC =====
+    function forceCheckResult() {
+        console.log('🔍 Force check result board...');
+        const resultBoard = document.getElementById('resultBoard');
+        if (resultBoard && resultBoard.classList.contains('show')) {
+            console.log('📋 Bảng kết quả đang hiển thị, trích xuất ngay!');
+            return extractRankings();
+        }
+        console.log('⏳ Bảng kết quả chưa hiển thị');
+        return false;
     }
 
     // ===== KHỞI TẠO =====
     function init() {
-        console.log('🌷 Khởi tạo Hoahong.js...');
+        if (isInitialized) {
+            console.log('🌷 Hoahong.js đã được khởi tạo, bỏ qua...');
+            return;
+        }
         
-        // Khởi tạo điểm
+        console.log('🌷 Khởi tạo Hoahong.js...');
+        isInitialized = true;
+        
         initPlayerPoints();
         
-        // Tạo bảng điểm
         setTimeout(() => {
             createScoreBoard();
             updateScoreBoard();
+            const board = document.getElementById('scoreBoard');
+            const btn = document.getElementById('toggleScoreBtn');
+            if (board && btn) {
+                board.style.display = 'block';
+                btn.textContent = '✕';
+            }
         }, 500);
 
-        // Bắt đầu theo dõi bảng kết quả
         setTimeout(() => {
             watchResultBoard();
         }, 1000);
 
-        // Theo dõi nút "Ván Mới" để reset
-        const btnNewGame = document.getElementById('btnNewGame');
-        if (btnNewGame) {
-            btnNewGame.addEventListener('click', function() {
+        document.addEventListener('gameReloaded', function() {
+            console.log('🔄 Game đã reload, reset hoa hồng...');
+            setTimeout(() => {
+                resetForNewGame();
                 setTimeout(() => {
-                    resetForNewGame();
-                }, 500);
-            });
-        }
+                    forceCheckResult();
+                }, 1000);
+            }, 500);
+        });
 
-        // Theo dõi đóng bảng kết quả
+        setTimeout(() => {
+            console.log('🔍 Kiểm tra bảng kết quả sau khởi tạo...');
+            forceCheckResult();
+        }, 1500);
+
         const resultClose = document.getElementById('resultClose');
         if (resultClose) {
             resultClose.addEventListener('click', function() {
+                console.log('🔄 Đóng bảng kết quả, reset trạng thái');
                 setTimeout(() => {
-                    resetForNewGame();
-                }, 300);
+                    processedRankings = [];
+                    lastProcessedTime = 0;
+                    isProcessingResult = false;
+                }, 500);
             });
         }
 
@@ -725,13 +793,21 @@
         showBoard: createScoreBoard,
         extractRankings: extractRankings,
         watch: watchResultBoard,
-        resetForNewGame: resetForNewGame
+        resetForNewGame: resetForNewGame,
+        init: init,
+        forceCheck: forceCheckResult,
+        clearProcessed: function() {
+            processedRankings = [];
+            lastProcessedTime = 0;
+            isProcessingResult = false;
+            console.log('🔄 Đã clear processed rankings');
+        }
     };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        setTimeout(init, 500);
+        setTimeout(init, 100);
     }
 
     console.log('✅ Hoahong.js đã được tải thành công!');

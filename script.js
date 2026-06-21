@@ -26,16 +26,13 @@
     const resultContent = document.getElementById('resultContent');
     const resultClose = document.getElementById('resultClose');
 	
-	// Thêm vào đầu file, sau các biến khác
-const BOT_DELAY = 2000; // Thời gian bot đánh (ms)
-const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
+	const BOT_DELAY = 2000;
+	const BOT_ACTION_DELAY = 500;
 
-    // ===== THÊM BIẾN CHO CHỌN HƯỚNG =====
     let isChoosingDirection = false;
     let pendingTileForDirection = null;
-    let forcedDirection = null; // 'left' hoặc 'right' - hướng bắt buộc
+    let forcedDirection = null;
 
-    // ===== KHỞI TẠO window.currentPlayer =====
     window.currentPlayer = currentPlayer;
 
     function createDominoSet() {
@@ -78,7 +75,6 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
         return maxIdx;
     }
 	
-	
     function initGame() {
         gameOver = false;
         playedTiles = [];
@@ -89,26 +85,21 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
         isChoosingDirection = false;
         pendingTileForDirection = null;
         forcedDirection = null;
-        resultBoard.classList.remove('show');
-		
-		
-		dealCards();
-    currentPlayer = findFirstPlayer();
-    
-    // ===== CẬP NHẬT window.currentPlayer =====
-    window.currentPlayer = currentPlayer;
-    console.log('🎯 initGame: currentPlayer =', currentPlayer); // Thêm log
-	
-	
-
-        // Ẩn hộp chọn hướng nếu có
+        
+        // Ẩn kết quả
+        const resultBoard = document.getElementById('resultBoard');
+        if (resultBoard) {
+            resultBoard.classList.remove('show');
+        }
+        
+        // Ẩn hộp chọn hướng
         hideDirectionChooser();
 
+        // CHỈ GỌI dealCards() 1 LẦN
         dealCards();
         currentPlayer = findFirstPlayer();
-        
-        // ===== CẬP NHẬT window.currentPlayer =====
         window.currentPlayer = currentPlayer;
+        console.log('🎯 initGame: currentPlayer =', currentPlayer);
 
         const firstPlayer = currentPlayer;
         const tile66 = hands[firstPlayer].findIndex(t => t[0] === 6 && t[1] === 6);
@@ -139,6 +130,14 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
             setTimeout(() => botTurn(), 2000);
         }
     }
+
+    // ... (giữ nguyên tất cả các hàm khác từ canPlay đến renderDots) ...
+
+    // ===== SỬA NÚT VÁN MỚI =====
+    document.getElementById('btnNewGame').addEventListener('click', function() {
+        // Reload trang để bắt đầu ván mới hoàn toàn
+        window.location.reload();
+    });
 
     function canPlay(tile, leftVal, rightVal) {
         return tile[0] === leftVal || tile[1] === leftVal ||
@@ -576,54 +575,78 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
 }, 500);
     }
 
-    function endGame(isLocked) {
-        gameOver = true;
-        hideDirectionChooser();
-        let html = '';
-        const rankTitles = ['🥇 Nhất', '🥈 Nhì', '🥉 Ba', '4️⃣ Cuối'];
+    // Trong function endGame(), THÊM ĐOẠN NÀY VÀO CUỐI
+function endGame(isLocked) {
+    gameOver = true;
+    hideDirectionChooser();
+    let html = '';
+    const rankTitles = ['🥇 Nhất', '🥈 Nhì', '🥉 Ba', '4️⃣ Cuối'];
 
-        if (isLocked) {
-            html += `<h2>🔒 BÀN CỜ BỊ TRIỆT (KHÓA ĐẦU)</h2>`;
-            html += `<div style="margin: 8px 0; font-size:12px; color:#ffddaa;">Xếp hạng dựa trên tiến trình về đích và tổng số điểm còn lại:</div>`;
+    if (isLocked) {
+        html += `<h2>🔒 BÀN CỜ BỊ TRIỆT (KHÓA ĐẦU)</h2>`;
+        html += `<div style="margin: 8px 0; font-size:12px; color:#ffddaa;">Xếp hạng dựa trên tiến trình về đích và tổng số điểm còn lại:</div>`;
 
-            const remainingPlayers = [];
-            for (let i = 0; i < 4; i++) {
-                if (!finishedPlayers.includes(i)) {
-                    const pts = hands[i].reduce((sum, t) => sum + t[0] + t[1], 0);
-                    remainingPlayers.push({ idx: i, points: pts });
-                }
-            }
-            remainingPlayers.sort((a, b) => a.points - b.points);
-
-            let finalRanking = [...finishedPlayers];
-            for (let rp of remainingPlayers) {
-                finalRanking.push(rp.idx);
-            }
-
-            for (let i = 0; i < finalRanking.length; i++) {
-                const pIdx = finalRanking[i];
-                const pts = hands[pIdx].reduce((sum, t) => sum + t[0] + t[1], 0);
-                const isFinishedBefore = finishedPlayers.includes(pIdx) && (hands[pIdx].length === 0);
-                
-                const highlight = (i === 0) ? 'style="color: #ffcc00; font-weight: bold; background: #550000;"' : '';
-                const note = isFinishedBefore ? ' (Hết bài trước)' : ` (${pts} điểm)`;
-                
-                html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]}${note}</div>`;
-            }
-        } else {
-            html += `<h2>🎀 Ván DOMINO 🎀</h2>`;
-            html += `<div style="margin: 8px 0; font-size:12px; color:#ffddaa;">Xếp hạng theo thứ tự hết bài tự nhiên:</div>`;
-
-            for (let i = 0; i < finishedPlayers.length; i++) {
-                const pIdx = finishedPlayers[i];
-                const highlight = (i === 0) ? 'style="color: #ffcc00; font-weight: bold; background: #550000;"' : '';
-                html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]} ⭐</div>`;
+        const remainingPlayers = [];
+        for (let i = 0; i < 4; i++) {
+            if (!finishedPlayers.includes(i)) {
+                const pts = hands[i].reduce((sum, t) => sum + t[0] + t[1], 0);
+                remainingPlayers.push({ idx: i, points: pts });
             }
         }
-        
-        resultContent.innerHTML = html;
-        resultBoard.classList.add('show');
+        remainingPlayers.sort((a, b) => a.points - b.points);
+
+        let finalRanking = [...finishedPlayers];
+        for (let rp of remainingPlayers) {
+            finalRanking.push(rp.idx);
+        }
+
+        for (let i = 0; i < finalRanking.length; i++) {
+            const pIdx = finalRanking[i];
+            const pts = hands[pIdx].reduce((sum, t) => sum + t[0] + t[1], 0);
+            const isFinishedBefore = finishedPlayers.includes(pIdx) && (hands[pIdx].length === 0);
+            
+            const highlight = (i === 0) ? 'style="color: #ffcc00; font-weight: bold; background: #550000;"' : '';
+            const note = isFinishedBefore ? ' (Hết bài trước)' : ` (${pts} điểm)`;
+            
+            html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]}${note}</div>`;
+        }
+    } else {
+        html += `<h2>🎀 Ván DOMINO 🎀</h2>`;
+        html += `<div style="margin: 8px 0; font-size:12px; color:#ffddaa;">Xếp hạng theo thứ tự hết bài tự nhiên:</div>`;
+
+        for (let i = 0; i < finishedPlayers.length; i++) {
+            const pIdx = finishedPlayers[i];
+            const highlight = (i === 0) ? 'style="color: #ffcc00; font-weight: bold; background: #550000;"' : '';
+            html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]} ⭐</div>`;
+        }
     }
+    
+    resultContent.innerHTML = html;
+    resultBoard.classList.add('show');
+    
+    // ===== GỌI EXTRACT RANKINGS SAU KHI BẢNG HIỂN THỊ =====
+    // Dùng setTimeout để đảm bảo DOM đã cập nhật
+    setTimeout(function() {
+        if (window.hoahong && typeof window.hoahong.extractRankings === 'function') {
+            console.log('📊 Gọi extractRankings từ endGame (sau 1.5s)');
+            // Gọi nhiều lần để chắc chắn
+            window.hoahong.extractRankings();
+            // Gọi lại lần 2 sau 500ms nếu lần đầu chưa bắt được
+            setTimeout(function() {
+                window.hoahong.extractRankings();
+            }, 500);
+        } else {
+            console.warn('⚠️ hoahong.js chưa sẵn sàng, thử lại...');
+            // Thử lại sau 2 giây
+            setTimeout(function() {
+                if (window.hoahong && typeof window.hoahong.extractRankings === 'function') {
+                    window.hoahong.extractRankings();
+                }
+            }, 2000);
+        }
+    }, 1500); // Tăng lên 1.5 giây
+}
+
 
     function renderDots(num) {
         const positions = {
@@ -1022,7 +1045,10 @@ const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
     }
 
     document.getElementById('btnNewGame').addEventListener('click', function() {
-        initGame();
+    // Gửi sự kiện để hoahong.js biết
+    document.dispatchEvent(new CustomEvent('gameReloaded'));
+    // Reload trang
+    location.reload();
     });
 
     document.getElementById('btnPlay').addEventListener('click', function() {
