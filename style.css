@@ -299,3 +299,4 @@ body {
 .result-board.show { display: flex; }
 .result-board .rank { font-size: 13px; background: #33000080; border-radius: 15px; padding: 3px; margin: 1px 0; }
 .result-board .close-btn { background: #2a1a1a; border: 1px solid #d99; border-radius: 15px; color: #fff; padding: 4px; cursor: pointer; }
+

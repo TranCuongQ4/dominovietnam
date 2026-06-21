@@ -1,4 +1,3 @@
-// script.js - SỬA PHẦN playTile VÀ playTileWithDirection
 (function() {
     const PLAYER_NAMES = ['Tôi', 'Bot Tây', 'Bot Bắc', 'Bot Đông'];
     let currentPlayer = 0;
@@ -26,11 +25,18 @@
     const resultBoard = document.getElementById('resultBoard');
     const resultContent = document.getElementById('resultContent');
     const resultClose = document.getElementById('resultClose');
+	
+	// Thêm vào đầu file, sau các biến khác
+const BOT_DELAY = 2000; // Thời gian bot đánh (ms)
+const BOT_ACTION_DELAY = 500; // Thời gian bot xử lý (ms)
 
     // ===== THÊM BIẾN CHO CHỌN HƯỚNG =====
     let isChoosingDirection = false;
     let pendingTileForDirection = null;
     let forcedDirection = null; // 'left' hoặc 'right' - hướng bắt buộc
+
+    // ===== KHỞI TẠO window.currentPlayer =====
+    window.currentPlayer = currentPlayer;
 
     function createDominoSet() {
         const set = [];
@@ -89,6 +95,9 @@
 
         dealCards();
         currentPlayer = findFirstPlayer();
+        
+        // ===== CẬP NHẬT window.currentPlayer =====
+        window.currentPlayer = currentPlayer;
 
         const firstPlayer = currentPlayer;
         const tile66 = hands[firstPlayer].findIndex(t => t[0] === 6 && t[1] === 6);
@@ -397,7 +406,7 @@
         selectedTileIndex = -1;
     }
 
-    // Hàm chuyển lượt thông minh
+    // Hàm chuyển lượt thông minh - SỬA
     function moveToNextPlayer() {
         if (finishedPlayers.length >= 3) {
             for (let i = 0; i < 4; i++) {
@@ -415,6 +424,9 @@
             nextPlayer = (nextPlayer + 1) % 4;
         }
         currentPlayer = nextPlayer;
+        
+        // ===== CẬP NHẬT window.currentPlayer =====
+        window.currentPlayer = currentPlayer;
     }
 
     function checkBoardLocked() {
@@ -547,8 +559,10 @@
         }
         if (!chosenTile) chosenTile = validTiles[0];
 
-        playTile(botIdx, chosenTile);
-        isProcessing = false;
+        setTimeout(() => {
+    playTile(botIdx, chosenTile);
+    isProcessing = false;
+}, 500);
     }
 
     function endGame(isLocked) {

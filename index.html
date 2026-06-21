@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Domino Việt</title>
     <link rel="stylesheet" href="style.css">
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231b4522'/%3E%3Ctext x='50' y='72' text-anchor='middle' font-size='65'%3E🌷%3C/text%3E%3C/svg%3E">
 </head>
 <body>
     <div id="app">
@@ -40,9 +41,11 @@
 
         <!-- Quân cờ của Tôi -->
         <div class="my-section">
-            <div class="my-label">⬇ Tôi</div>
-            <div class="my-tiles" id="myTilesContainer"></div>
-        </div>
+    <div class="my-label">
+        <span class="player-name-text" id="playerName0">⬇ Tôi</span>
+    </div>
+    <div class="my-tiles" id="myTilesContainer"></div>
+</div>
 
         <!-- Nút điều khiển -->
         <div class="actions">
@@ -69,6 +72,8 @@
 
      <script src="botco.js"></script>
 <script src="quanly.js"></script>
+<script src="blink.js"></script>
+<script src="hoahong.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
