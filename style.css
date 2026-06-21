@@ -9,9 +9,9 @@
 }
 
 body {
-    width: 375px;
-    height: 667px;
-    margin: 0 auto;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
     background: #0b0e14;
     font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
     color: #eee;
@@ -19,7 +19,6 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    position: relative;
 }
 
 #app {
