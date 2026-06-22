@@ -1117,6 +1117,120 @@ function endGame(isLocked) {
 
 })();
 
+// ===== HÀM GỬI KẾT QUẢ XẾP HẠNG SANG HOAHONG.JS =====
+let rankingSent = false; // Biến kiểm tra đã gửi thành công chưa
+let sendAttempts = 0; // Số lần thử gửi
+const MAX_ATTEMPTS = 10; // Số lần thử tối đa
+
+function sendRankingToHoahong(rankings) {
+    if (rankingSent) {
+        console.log('✅ Đã gửi thành công, bỏ qua...');
+        return;
+    }
+    
+    if (sendAttempts >= MAX_ATTEMPTS) {
+        console.log('❌ Đã thử gửi', MAX_ATTEMPTS, 'lần, dừng lại...');
+        return;
+    }
+    
+    sendAttempts++;
+    console.log(`📤 Lần thử ${sendAttempts}/${MAX_ATTEMPTS}: Gửi kết quả sang hoahong.js...`, rankings);
+    
+    if (window.hoahong && typeof window.hoahong.receiveRanking === 'function') {
+        // Gọi hàm nhận của hoahong.js, nếu trả về true là đã xử lý xong
+        const result = window.hoahong.receiveRanking(rankings);
+        if (result === true) {
+            rankingSent = true;
+            console.log('✅ hoahong.js đã nhận và xử lý xong!');
+            return;
+        } else {
+            console.log('⏳ hoahong.js chưa xử lý xong, thử lại...');
+            // Thử lại sau 1 giây
+            setTimeout(() => sendRankingToHoahong(rankings), 1000);
+        }
+    } else {
+        console.warn('⚠️ hoahong.js chưa sẵn sàng, thử lại sau 1s...');
+        setTimeout(() => sendRankingToHoahong(rankings), 1000);
+    }
+}
+
+// ===== LẤY KẾT QUẢ XẾP HẠNG TỪ BẢNG KẾT QUẢ =====
+function getRankingFromResultBoard() {
+    console.log('🔍 Đang lấy xếp hạng từ bảng kết quả...');
+    
+    const resultBoard = document.getElementById('resultBoard');
+    if (!resultBoard || !resultBoard.classList.contains('show')) {
+        console.log('⏳ Bảng kết quả chưa hiển thị, thử lại sau...');
+        setTimeout(getRankingFromResultBoard, 500);
+        return;
+    }
+
+    const content = document.getElementById('resultContent');
+    if (!content) {
+        console.log('❌ Không tìm thấy resultContent');
+        return;
+    }
+
+    const rankElements = content.querySelectorAll('.rank');
+    if (rankElements.length === 0) {
+        console.log('❌ Không tìm thấy .rank elements');
+        return;
+    }
+
+    // Lấy tên người chơi theo thứ tự Nhất, Nhì, Ba, Cuối
+    const rankings = [];
+    const names = ['Tôi', 'Bot Tây', 'Bot Bắc', 'Bot Đông'];
+    
+    for (let el of rankElements) {
+        const text = el.textContent;
+        let found = false;
+        for (let name of names) {
+            if (text.includes(name)) {
+                rankings.push(name);
+                found = true;
+                break;
+            }
+        }
+        // Nếu không tìm thấy tên, thêm placeholder
+        if (!found) {
+            rankings.push('Unknown');
+        }
+    }
+
+    console.log('📊 Xếp hạng tìm thấy:', rankings);
+
+    // Bắt đầu gửi ngay, không cần đợi đủ người
+    // Vì cuối trận đã có kết quả
+    if (rankings.length > 0) {
+        // Reset trạng thái gửi
+        rankingSent = false;
+        sendAttempts = 0;
+        // Gửi ngay lập tức
+        sendRankingToHoahong(rankings);
+    } else {
+        console.log('⚠️ Không tìm thấy xếp hạng nào, thử lại...');
+        setTimeout(getRankingFromResultBoard, 500);
+    }
+}
+
+// ===== THEO DÕI KHI BẢNG KẾT QUẢ XUẤT HIỆN =====
+function watchForResultBoard() {
+    const resultBoard = document.getElementById('resultBoard');
+    if (resultBoard && resultBoard.classList.contains('show')) {
+        console.log('🎯 Phát hiện bảng kết quả đang hiển thị!');
+        // Đợi 300ms để DOM cập nhật xong
+        setTimeout(getRankingFromResultBoard, 300);
+    } else {
+        // Tiếp tục theo dõi
+        setTimeout(watchForResultBoard, 500);
+    }
+}
+
+// Bắt đầu theo dõi ngay khi script load xong
+setTimeout(watchForResultBoard, 1000);
+
+
+
 // Hàm chuyển lượt thông minh - SỬA
 function moveToNextPlayer() {
     if (finishedPlayers.length >= 3) {
