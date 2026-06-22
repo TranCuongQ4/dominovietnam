@@ -576,11 +576,15 @@
     }
 
     // Trong function endGame(), THÊM ĐOẠN NÀY VÀO CUỐI
+
 function endGame(isLocked) {
     gameOver = true;
     hideDirectionChooser();
     let html = '';
     const rankTitles = ['🥇 Nhất', '🥈 Nhì', '🥉 Ba', '4️⃣ Cuối'];
+    
+    // ===== KHAI BÁO finalRanking Ở ĐẦU HÀM =====
+    let finalRanking = [];
 
     if (isLocked) {
         html += `<h2>🔒 BÀN CỜ BỊ TRIỆT (KHÓA ĐẦU)</h2>`;
@@ -595,12 +599,22 @@ function endGame(isLocked) {
         }
         remainingPlayers.sort((a, b) => a.points - b.points);
 
-        let finalRanking = [...finishedPlayers];
+        finalRanking = [...finishedPlayers];
         for (let rp of remainingPlayers) {
             finalRanking.push(rp.idx);
         }
 
-        for (let i = 0; i < finalRanking.length; i++) {
+        // Đảm bảo có 4 người
+        while (finalRanking.length < 4) {
+            for (let i = 0; i < 4; i++) {
+                if (!finalRanking.includes(i)) {
+                    finalRanking.push(i);
+                    break;
+                }
+            }
+        }
+
+        for (let i = 0; i < finalRanking.length && i < 4; i++) {
             const pIdx = finalRanking[i];
             const pts = hands[pIdx].reduce((sum, t) => sum + t[0] + t[1], 0);
             const isFinishedBefore = finishedPlayers.includes(pIdx) && (hands[pIdx].length === 0);
@@ -614,37 +628,50 @@ function endGame(isLocked) {
         html += `<h2>🎀 Ván DOMINO 🎀</h2>`;
         html += `<div style="margin: 8px 0; font-size:12px; color:#ffddaa;">Xếp hạng theo thứ tự hết bài tự nhiên:</div>`;
 
-        for (let i = 0; i < finishedPlayers.length; i++) {
-            const pIdx = finishedPlayers[i];
+        // Lấy danh sách người đã hết bài
+        finalRanking = [...finishedPlayers];
+        
+        // ===== THÊM NGƯỜI CÒN THIẾU VÀO CUỐI =====
+        while (finalRanking.length < 4) {
+            for (let i = 0; i < 4; i++) {
+                if (!finalRanking.includes(i)) {
+                    finalRanking.push(i);
+                    break;
+                }
+            }
+        }
+
+        // Hiển thị đủ 4 người
+        for (let i = 0; i < finalRanking.length && i < 4; i++) {
+            const pIdx = finalRanking[i];
             const highlight = (i === 0) ? 'style="color: #ffcc00; font-weight: bold; background: #550000;"' : '';
-            html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]} ⭐</div>`;
+            const isFinished = finishedPlayers.includes(pIdx) && hands[pIdx].length === 0;
+            const note = isFinished ? ' ⭐' : ` (${hands[pIdx].length} bài còn lại)`;
+            html += `<div class="rank" ${highlight}>${rankTitles[i]}: ${PLAYER_NAMES[pIdx]}${note}</div>`;
         }
     }
     
+    // ===== CHỈ GỌI 1 LẦN =====
     resultContent.innerHTML = html;
     resultBoard.classList.add('show');
     
-    // ===== GỌI EXTRACT RANKINGS SAU KHI BẢNG HIỂN THỊ =====
-    // Dùng setTimeout để đảm bảo DOM đã cập nhật
+    // ===== GỬI KẾT QUẢ XẾP HẠNG SANG HOAHONG.JS =====
+    const rankingNames = finalRanking.slice(0, 4).map(idx => PLAYER_NAMES[idx]);
+    console.log('🏆 Kết quả xếp hạng (4 người):', rankingNames);
+    
     setTimeout(function() {
-        if (window.hoahong && typeof window.hoahong.extractRankings === 'function') {
-            console.log('📊 Gọi extractRankings từ endGame (sau 1.5s)');
-            // Gọi nhiều lần để chắc chắn
-            window.hoahong.extractRankings();
-            // Gọi lại lần 2 sau 500ms nếu lần đầu chưa bắt được
-            setTimeout(function() {
-                window.hoahong.extractRankings();
-            }, 500);
+        if (window.hoahong && typeof window.hoahong.receiveRanking === 'function') {
+            console.log('📤 Gửi kết quả cho hoahong.js:', rankingNames);
+            window.hoahong.receiveRanking(rankingNames);
         } else {
             console.warn('⚠️ hoahong.js chưa sẵn sàng, thử lại...');
-            // Thử lại sau 2 giây
             setTimeout(function() {
-                if (window.hoahong && typeof window.hoahong.extractRankings === 'function') {
-                    window.hoahong.extractRankings();
+                if (window.hoahong && typeof window.hoahong.receiveRanking === 'function') {
+                    window.hoahong.receiveRanking(rankingNames);
                 }
-            }, 2000);
+            }, 1000);
         }
-    }, 1500); // Tăng lên 1.5 giây
+    }, 500);
 }
 
 
